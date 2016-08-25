@@ -433,6 +433,7 @@ class SupplierFramework(db.Model):
 
         return supplier_framework
 
+
 class FrameworkAgreement(db.Model):
     __tablename__ = 'framework_agreements'
 
@@ -446,6 +447,8 @@ class FrameworkAgreement(db.Model):
     countersigned_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     signature_page_url = db.Column(db.String, default='draft')
     countersignature_page_url = db.Column(db.String, default='draft')
+    agreement_details = db.Column(JSON)
+
 
 class User(db.Model):
     __tablename__ = 'users'

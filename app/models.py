@@ -433,7 +433,7 @@ class SupplierFramework(db.Model):
 
         return supplier_framework
 
-class FrameworkAgreement(db.model):
+class FrameworkAgreement(db.Model):
     __tablename__ = 'framework_agreements'
 
     id = db.Column(db.Integer, primary_key=True)

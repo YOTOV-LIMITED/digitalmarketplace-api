@@ -433,6 +433,19 @@ class SupplierFramework(db.Model):
 
         return supplier_framework
 
+class FrameworkAgreement(db.model):
+    __tablename__ = 'framework_agreements'
+
+    id = db.Column(db.Integer, primary_key=True)
+    supplier_id = db.Column(db.Integer,
+                            db.ForeignKey('suppliers.supplier_id'))
+    framework_id = db.Column(db.Integer,
+                             db.ForeignKey('frameworks.id'))
+    status = db.Column(db.String, default='draft')
+    agreement_returned_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
+    countersigned_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
+    signature_page_url = db.Column(db.String, default='draft')
+    countersignature_page_url = db.Column(db.String, default='draft')
 
 class User(db.Model):
     __tablename__ = 'users'

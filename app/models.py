@@ -445,9 +445,21 @@ class FrameworkAgreement(db.Model):
     status = db.Column(db.String, default='draft')
     agreement_returned_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
     countersigned_at = db.Column(db.DateTime, index=False, unique=False, nullable=True)
-    signature_page_url = db.Column(db.String, default='draft')
-    countersignature_page_url = db.Column(db.String, default='draft')
+    signature_page_url = db.Column(db.String)
+    countersignature_page_url = db.Column(db.String)
     agreement_details = db.Column(JSON)
+
+    def serialize(self):
+        framework_agreement = dict({
+            "id": self.id,
+            "supplierId": self.supplier_id,
+            "frameworkId": self.framework_id,
+            "status": self.status,
+            "agreementDetails": self.agreement_details,
+            "signaturePageUrl": self.signature_page_url
+        })
+
+        return framework_agreement
 
 
 class User(db.Model):

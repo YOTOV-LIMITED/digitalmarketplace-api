@@ -6,7 +6,7 @@ from .. import main
 from ... import db
 from ...models import (
     Supplier, ContactInformation, AuditEvent,
-    Service, SupplierFramework, Framework, User
+    Service, SupplierFramework, Framework, User, FrameworkAgreement
 )
 from ...validation import (
     validate_supplier_json_or_400,
@@ -392,6 +392,47 @@ def register_framework_interest(supplier_id, framework_slug):
         return jsonify(message="Database Error: {0}".format(e)), 400
 
     return jsonify(frameworkInterest=interest_record.serialize()), 201
+
+@main.route('/suppliers/<supplier_id>/framework_agreement/<framework_slug>', methods=['POST'])
+def create_draft_framework_agreement(supplier_id, framework_slug):
+    framework = Framework.query.filter(
+        Framework.slug == framework_slug
+    ).first_or_404()
+
+    supplier = Supplier.query.filter(
+        Supplier.supplier_id == supplier_id
+    ).first_or_404()
+
+    json_payload = get_json_from_request()
+
+    draft_agreement = FrameworkAgreement(supplier_id=supplier.supplier_id,
+                                         framework_id=framework.id,
+                                         agreement_details=json_payload.get('agreementDetails'))
+    db.session.add(draft_agreement)
+    db.session.commit()
+
+    return jsonify(frameworkAgreement=draft_agreement.serialize()), 201
+
+@main.route('/suppliers/framework_agreements/<framework_agreement_id>', methods=['GET'])
+def get_framework_agreement(framework_agreement_id):
+    framework_agreement = FrameworkAgreement.query.get(framework_agreement_id)
+
+    return jsonify(frameworkAgreement=framework_agreement.serialize()), 201
+
+@main.route('/suppliers/framework_agreements/<framework_agreement_id>', methods=['PUT'])
+def add_sig_url_to_framework_agreement(framework_agreement_id):
+    framework_agreement = FrameworkAgreement.query.get(framework_agreement_id)
+    json_payload = get_json_from_request()
+    url = json_payload['url']
+    timestamp = json_payload['timestamp']
+
+    framework_agreement.signature_page_url = url
+    framework_agreement.agreement_returned_at = datetime.strptime(timestamp, '%Y%m%dT%H%M%S')
+
+    db.session.add(framework_agreement)
+    db.session.commit()
+
+    return jsonify(frameworkAgreement=framework_agreement.serialize()), 201
 
 
 @main.route('/suppliers/<supplier_id>/frameworks/<framework_slug>', methods=['POST'])

@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "additionalProperties": false,
+  "minProperties": 1,
+  "properties": {
+    "respondToEmailAddress": {
+      "type": "string",
+      "minLength": 1
+    },
+    "niceToHaveRequirementsMultiquestion": {
+      "items": {
+        "additionalProperties": false,
+        "allOf":
+          [
+            {
+              "oneOf": [
+                {
+                  "properties": {
+                    "evidence": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "yesno": {
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "yesno",
+                    "evidence"
+                  ]
+                },
+                {
+                  "properties": {
+                    "yesno": {
+                      "enum": [
+                        false
+                      ]
+                    }
+                  },
+                 "required": [
+                   "yesno"
+                  ]
+                }
+              ]
+            }
+        ],
+        "properties": {
+          "evidence": {
+            "maxLength": 500,
+            "minLength": 1,
+            "pattern": "^(?:\\S+\\s+){0,49}\\S+$",
+            "type": "string"
+          },
+          "yesno": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array"
+    }
+  },
+  "required": [
+    "niceToHaveRequirementsMultiquestion",
+    "respondToEmailAddress"
+  ],
+  "title": "Declaration Schema",
+  "type": "object"
+}

@@ -1334,8 +1334,10 @@ class BriefResponse(db.Model):
         ], else_='draft')
 
     def validate(self, enforce_required=True, required_fields=None, max_day_rate=None):
+
         errs = get_validation_errors(
-            'brief-responses-{}-{}'.format(self.brief.framework.slug, self.brief.lot.slug),
+            # 'brief-responses-{}-{}'.format(self.brief.framework.slug, self.brief.lot.slug),
+            'brief-responses-multiquestion'.format(self.brief.framework.slug, self.brief.lot.slug),
             self.data,
             enforce_required=enforce_required,
             required_fields=required_fields

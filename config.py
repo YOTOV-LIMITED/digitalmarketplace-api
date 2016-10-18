@@ -25,6 +25,7 @@ class Config:
     RAISE_ERROR_ON_MISSING_FEATURES = True
 
     FEATURE_FLAGS_TRANSACTION_ISOLATION = False
+    FEATURE_FLAGS_TWO_FLOWS = False
 
     DM_API_SERVICES_PAGE_SIZE = 100
     DM_API_SUPPLIERS_PAGE_SIZE = 100
@@ -59,6 +60,8 @@ class Development(Config):
     DM_API_AUTH_TOKENS = 'myToken'
     DM_SEARCH_API_AUTH_TOKEN = 'myToken'
     DM_SEARCH_API_URL = 'http://localhost:5001'
+
+    FEATURE_FLAGS_TWO_FLOWS = enabled_since('2016-09-18')
 
 
 class Live(Config):

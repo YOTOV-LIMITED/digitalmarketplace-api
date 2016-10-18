@@ -1283,8 +1283,15 @@ class BriefResponse(db.Model):
         return data
 
     def validate(self, enforce_required=True, required_fields=None, max_day_rate=None):
+        pub_date = self.brief.published_at
+        flag_date = datetime.strptime(current_app.config['FEATURE_FLAGS_TWO_FLOWS'], "%Y-%m-%d")
+        if pub_date > flag_date:
+            validator_name = 'brief-responses-{}-{}-new'.format(self.brief.framework.slug, self.brief.lot.slug)
+        else:
+            validator_name = 'brief-responses-{}-{}'.format(self.brief.framework.slug, self.brief.lot.slug)
+
         errs = get_validation_errors(
-            'brief-responses-{}-{}'.format(self.brief.framework.slug, self.brief.lot.slug),
+            validator_name,
             self.data,
             enforce_required=enforce_required,
             required_fields=required_fields

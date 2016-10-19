@@ -22,6 +22,7 @@ SCHEMA_NAMES = [
     'briefs-digital-outcomes-and-specialists-digital-specialists',
     'briefs-digital-outcomes-and-specialists-user-research-participants',
     'brief-responses-digital-outcomes-and-specialists-digital-outcomes',
+    'brief-responses-digital-outcomes-and-specialists-digital-outcomes-new',
     'brief-responses-digital-outcomes-and-specialists-digital-specialists',
     'brief-responses-digital-outcomes-and-specialists-user-research-participants',
     'briefs-digital-outcomes-and-specialists-2-digital-outcomes',

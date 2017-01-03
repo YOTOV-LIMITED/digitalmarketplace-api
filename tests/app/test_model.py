@@ -41,8 +41,6 @@ def test_should_not_return_password_on_user():
 
 
 def test_framework_should_not_accept_invalid_status():
-    app = create_app('test')
-    with app.app_context(), assert_raises(ValidationError):
         f = Framework(
             name='foo',
             slug='foo',
@@ -54,8 +52,6 @@ def test_framework_should_not_accept_invalid_status():
 
 
 def test_framework_should_accept_valid_statuses():
-    app = create_app('test')
-    with app.app_context():
         for i, status in enumerate(Framework.STATUSES):
             f = Framework(
                 name='foo',
@@ -70,12 +66,10 @@ def test_framework_should_accept_valid_statuses():
 class TestBriefs(BaseApplicationTest):
     def setup(self):
         super(TestBriefs, self).setup()
-        with self.app.app_context():
-            self.framework = Framework.query.filter(Framework.slug == 'digital-outcomes-and-specialists').first()
-            self.lot = self.framework.get_lot('digital-outcomes')
+        self.framework = Framework.query.filter(Framework.slug == 'digital-outcomes-and-specialists').first()
+        self.lot = self.framework.get_lot('digital-outcomes')
 
     def test_create_a_new_brief(self):
-        with self.app.app_context():
             brief = Brief(data={}, framework=self.framework, lot=self.lot)
             db.session.add(brief)
             db.session.commit()
@@ -86,7 +80,6 @@ class TestBriefs(BaseApplicationTest):
             assert brief.data == dict()
 
     def test_updating_a_brief_updates_dates(self):
-        with self.app.app_context():
             brief = Brief(data={}, framework=self.framework, lot=self.lot)
             db.session.add(brief)
             db.session.commit()
@@ -102,7 +95,6 @@ class TestBriefs(BaseApplicationTest):
             assert brief.updated_at > updated_at
 
     def test_update_from_json(self):
-        with self.app.app_context():
             brief = Brief(data={}, framework=self.framework, lot=self.lot)
             db.session.add(brief)
             db.session.commit()
@@ -147,33 +139,30 @@ class TestBriefs(BaseApplicationTest):
         assert brief.status == 'draft'
 
     def test_query_draft_brief(self):
-        with self.app.app_context():
-            db.session.add(Brief(data={}, framework=self.framework, lot=self.lot))
-            db.session.commit()
+        db.session.add(Brief(data={}, framework=self.framework, lot=self.lot))
+        db.session.commit()
 
-            assert Brief.query.filter(Brief.status == 'draft').count() == 1
-            assert Brief.query.filter(Brief.status == 'live').count() == 0
-            assert Brief.query.filter(Brief.status == 'withdrawn').count() == 0
-            assert Brief.query.filter(Brief.status == 'closed').count() == 0
+        assert Brief.query.filter(Brief.status == 'draft').count() == 1
+        assert Brief.query.filter(Brief.status == 'live').count() == 0
+        assert Brief.query.filter(Brief.status == 'withdrawn').count() == 0
+        assert Brief.query.filter(Brief.status == 'closed').count() == 0
 
-            # Check python implementation gives same result as the sql implementation
-            assert Brief.query.all()[0].status == 'draft'
+        # Check python implementation gives same result as the sql implementation
+        assert Brief.query.all()[0].status == 'draft'
 
     def test_query_live_brief(self):
-        with self.app.app_context():
-            db.session.add(Brief(data={}, framework=self.framework, lot=self.lot, published_at=datetime.utcnow()))
-            db.session.commit()
+        db.session.add(Brief(data={}, framework=self.framework, lot=self.lot, published_at=datetime.utcnow()))
+        db.session.commit()
 
-            assert Brief.query.filter(Brief.status == 'draft').count() == 0
-            assert Brief.query.filter(Brief.status == 'live').count() == 1
-            assert Brief.query.filter(Brief.status == 'withdrawn').count() == 0
-            assert Brief.query.filter(Brief.status == 'closed').count() == 0
+        assert Brief.query.filter(Brief.status == 'draft').count() == 0
+        assert Brief.query.filter(Brief.status == 'live').count() == 1
+        assert Brief.query.filter(Brief.status == 'withdrawn').count() == 0
+        assert Brief.query.filter(Brief.status == 'closed').count() == 0
 
-            # Check python implementation gives same result as the sql implementation
-            assert Brief.query.all()[0].status == 'live'
+        # Check python implementation gives same result as the sql implementation
+        assert Brief.query.all()[0].status == 'live'
 
     def test_query_withdrawn_brief(self):
-        with self.app.app_context():
             db.session.add(Brief(
                 data={}, framework=self.framework, lot=self.lot,
                 published_at=datetime.utcnow() - timedelta(days=1), withdrawn_at=datetime.utcnow()
@@ -189,7 +178,6 @@ class TestBriefs(BaseApplicationTest):
             assert Brief.query.all()[0].status == 'withdrawn'
 
     def test_query_closed_brief(self):
-        with self.app.app_context():
             db.session.add(Brief(data={}, framework=self.framework, lot=self.lot, published_at=datetime(2000, 1, 1)))
             db.session.commit()
 
@@ -235,28 +223,24 @@ class TestBriefs(BaseApplicationTest):
         assert brief.clarification_questions_published_by == datetime(2016, 3, 9, 23, 59, 59)
 
     def test_query_brief_applications_closed_at_date_for_brief_with_no_requirements_length(self):
-        with self.app.app_context():
             db.session.add(Brief(data={}, framework=self.framework, lot=self.lot,
                                  published_at=datetime(2016, 3, 3, 12, 30, 1, 2)))
             db.session.commit()
             assert Brief.query.filter(Brief.applications_closed_at == datetime(2016, 3, 17, 23, 59, 59)).count() == 1
 
     def test_query_brief_applications_closed_at_date_for_one_week_brief(self):
-        with self.app.app_context():
             db.session.add(Brief(data={'requirementsLength': '1 week'}, framework=self.framework, lot=self.lot,
                                  published_at=datetime(2016, 3, 3, 12, 30, 1, 2)))
             db.session.commit()
             assert Brief.query.filter(Brief.applications_closed_at == datetime(2016, 3, 10, 23, 59, 59)).count() == 1
 
     def test_query_brief_applications_closed_at_date_for_two_week_brief(self):
-        with self.app.app_context():
             db.session.add(Brief(data={'requirementsLength': '2 weeks'}, framework=self.framework, lot=self.lot,
                                  published_at=datetime(2016, 3, 3, 12, 30, 1, 2)))
             db.session.commit()
             assert Brief.query.filter(Brief.applications_closed_at == datetime(2016, 3, 17, 23, 59, 59)).count() == 1
 
     def test_query_brief_applications_closed_at_date_for_mix_of_brief_lengths(self):
-        with self.app.app_context():
             db.session.add(Brief(data={'requirementsLength': '1 week'}, framework=self.framework, lot=self.lot,
                                  published_at=datetime(2016, 3, 10, 12, 30, 1, 2)))
             db.session.add(Brief(data={'requirementsLength': '2 weeks'}, framework=self.framework, lot=self.lot,
@@ -335,7 +319,6 @@ class TestBriefs(BaseApplicationTest):
                 brief.status = status
 
     def test_buyer_users_can_be_added_to_a_brief(self):
-        with self.app.app_context():
             self.setup_dummy_user(role='buyer')
 
             brief = Brief(data={}, framework=self.framework, lot=self.lot,
@@ -344,7 +327,6 @@ class TestBriefs(BaseApplicationTest):
             assert len(brief.users) == 1
 
     def test_non_buyer_users_cannot_be_added_to_a_brief(self):
-        with self.app.app_context():
             self.setup_dummy_user(role='admin')
 
             with pytest.raises(ValidationError):
@@ -352,7 +334,6 @@ class TestBriefs(BaseApplicationTest):
                       users=User.query.all())
 
     def test_brief_lot_must_be_associated_to_the_framework(self):
-        with self.app.app_context():
             other_framework = Framework.query.filter(Framework.slug == 'g-cloud-7').first()
 
             brief = Brief(data={}, framework=other_framework, lot=self.lot)
@@ -361,21 +342,18 @@ class TestBriefs(BaseApplicationTest):
                 db.session.commit()
 
     def test_brief_lot_must_require_briefs(self):
-        with self.app.app_context():
             with pytest.raises(ValidationError):
                 Brief(data={},
                       framework=self.framework,
                       lot=self.framework.get_lot('user-research-studios'))
 
     def test_cannot_update_lot_by_id(self):
-        with self.app.app_context():
             with pytest.raises(ValidationError):
                 Brief(data={},
                       framework=self.framework,
                       lot_id=self.framework.get_lot('user-research-studios').id)
 
     def test_add_brief_clarification_question(self):
-        with self.app.app_context():
             brief = Brief(data={}, framework=self.framework, lot=self.lot, status="live")
             db.session.add(brief)
             db.session.commit()
@@ -391,7 +369,6 @@ class TestBriefs(BaseApplicationTest):
             ).all()) == 1
 
     def test_new_clarification_questions_get_added_to_the_end(self):
-        with self.app.app_context():
             brief = Brief(data={}, framework=self.framework, lot=self.lot, status="live")
             db.session.add(brief)
             brief.add_clarification_question("How?", "This")
@@ -402,16 +379,15 @@ class TestBriefs(BaseApplicationTest):
             assert brief.clarification_questions[1].question == "When"
 
     def test_copy_brief(self):
-        with self.app.app_context():
-            self.framework.status = 'live'
-            self.setup_dummy_user(role='buyer')
+        self.framework.status = 'live'
+        self.setup_dummy_user(role='buyer')
 
-            brief = Brief(
-                data={'title': 'my title'},
-                framework=self.framework,
-                lot=self.lot,
-                users=User.query.all()
-            )
+        brief = Brief(
+            data={'title': 'my title'},
+            framework=self.framework,
+            lot=self.lot,
+            users=User.query.all()
+        )
 
         copy = brief.copy()
 

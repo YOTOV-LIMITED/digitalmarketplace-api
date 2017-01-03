@@ -4,22 +4,57 @@ from datetime import datetime
 from itertools import product
 from six import iteritems, iterkeys
 import pytest
-
-from .app import setup, teardown
+from sqlalchemy.orm.session import Session
+from tests.app.helpers import WSGIApplicationWithEnvironment, method_auth_finalizer, method_db_finalizer
+from .app.helpers import session_db_fixture, session_db_finalizer
 
 from app import create_app
 from app.models import db, Framework, SupplierFramework, Supplier, User, ContactInformation
 
 
 @pytest.fixture(autouse=True, scope='session')
-def db_migration(request):
-    setup()
-    request.addfinalizer(teardown)
-
-
-@pytest.fixture(scope='session')
 def app(request):
-    return create_app('test')
+    """Create the test app, push it to the context and add the removal from the context as the finalizer."""
+    app = create_app('test')
+    ctx = app.test_request_context()
+    ctx.push()
+    # We want to remove test app from context as the finalizer for this setup.
+    request.addfinalizer(ctx.pop)
+    request._app = app
+    return app
+
+
+@pytest.fixture(autouse=True, scope='session')
+def test_db(request, app):
+    """Run setup and teardown for the test database."""
+    db = session_db_fixture(app)
+    request.addfinalizer(lambda: session_db_finalizer(app, db))
+    return db
+
+
+@pytest.fixture(autouse=True, scope='function')
+def reset_db(request, app, test_db):
+    def fin():
+        method_auth_finalizer()
+        method_db_finalizer(app, test_db)
+    request.addfinalizer(fin)
+
+
+@pytest.fixture(autouse=True, scope='function')
+def support_classes(request, app):
+    if request.cls is None:
+        return
+
+    valid_token = 'valid-token'
+    app.config['DM_API_AUTH_TOKENS'] = valid_token
+    app.wsgi_app = WSGIApplicationWithEnvironment(
+        app.wsgi_app,
+        HTTP_AUTHORIZATION='Bearer {}'.format(valid_token)
+    )
+    request.cls.app = app
+    request.cls.client = app.test_client()
+    request.cls._auth_tokens = app.config['DM_API_AUTH_TOKENS']
+
 
 
 @pytest.fixture(params=[{'supplier_id': None}])

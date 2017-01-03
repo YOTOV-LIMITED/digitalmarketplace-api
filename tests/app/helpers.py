@@ -38,6 +38,60 @@ COMPLETE_DIGITAL_SPECIALISTS_BRIEF = {
 }
 
 
+import os
+from app import create_app, db
+from flask.ext.migrate import Migrate, MigrateCommand
+from flask.ext.script import Manager
+from alembic.command import upgrade
+from alembic.config import Config
+from sqlalchemy import inspect
+
+
+def session_db_fixture(app):
+    print("Doing db setup")
+    Migrate(app, db)
+    Manager(db, MigrateCommand)
+    ALEMBIC_CONFIG = \
+        os.path.join(os.path.dirname(__file__),
+                     '../../migrations/alembic.ini')
+    config = Config(ALEMBIC_CONFIG)
+    config.set_main_option(
+        "script_location",
+        "migrations")
+    upgrade(config, 'head')
+    print("Done db setup")
+    return db
+
+
+def session_db_finalizer(app, db):
+    db.session.remove()
+    db.engine.execute("drop sequence if exists suppliers_supplier_id_seq cascade")
+    db.drop_all()
+    db.engine.execute("drop table alembic_version")
+    insp = inspect(db.engine)
+    for enum in insp.get_enums():
+        db.Enum(name=enum['name']).drop(db.engine)
+    db.get_engine(app).dispose()
+
+def method_db_finalizer(app, test_db):
+    test_db.session.remove()
+    for table in reversed(db.metadata.sorted_tables):
+        if table.name not in ["lots", "frameworks", "framework_lots"]:
+            db.engine.execute(table.delete())
+    FrameworkLot.query.filter(FrameworkLot.framework_id >= 100).delete()
+    Framework.query.filter(Framework.id >= 100).delete()
+    test_db.session.commit()
+    test_db.get_engine(app).dispose()
+
+def method_auth_finalizer():
+    # if self._auth_tokens is None:
+    #     del self.app.config['DM_API_AUTH_TOKENS']
+    # else:
+    #     self.app.config['DM_API_AUTH_TOKENS'] = self._auth_tokens
+    pass
+
+
+
 def fixture_params(fixture_name, params):
     return pytest.mark.parametrize(fixture_name, [params], indirect=True)
 
@@ -64,9 +118,10 @@ class BaseApplicationTest(object):
     config = None
 
     def setup(self):
-        self.app = create_app('test')
-        self.client = self.app.test_client()
-        self.setup_authorization(self.app)
+        # self.app = create_app('test')
+        # self.client = self.app.test_client()
+        # self.setup_authorization(self.app)
+        pass
 
     def setup_authorization(self, app):
         """Set up bearer token and pass on all requests"""
@@ -265,27 +320,6 @@ class BaseApplicationTest(object):
                 )
             )
             db.session.commit()
-
-    def teardown(self):
-        self.teardown_authorization()
-        self.teardown_database()
-
-    def teardown_authorization(self):
-        if self._auth_tokens is None:
-            del self.app.config['DM_API_AUTH_TOKENS']
-        else:
-            self.app.config['DM_API_AUTH_TOKENS'] = self._auth_tokens
-
-    def teardown_database(self):
-        with self.app.app_context():
-            db.session.remove()
-            for table in reversed(db.metadata.sorted_tables):
-                if table.name not in ["lots", "frameworks", "framework_lots"]:
-                    db.engine.execute(table.delete())
-            FrameworkLot.query.filter(FrameworkLot.framework_id >= 100).delete()
-            Framework.query.filter(Framework.id >= 100).delete()
-            db.session.commit()
-            db.get_engine(self.app).dispose()
 
     def load_example_listing(self, name):
         file_path = os.path.join("example_listings", "{}.json".format(name))

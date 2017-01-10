@@ -12,8 +12,7 @@ from app.validation import validates_against_schema, is_valid_service_id, is_val
     is_valid_acknowledged_state, get_validation_errors, is_valid_string, min_price_less_than_max_price, \
     is_valid_buyer_email, translate_json_schema_errors
 
-EXAMPLE_LISTING_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                    '..', '..', 'example_listings'))
+EXAMPLE_LISTING_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'example_listings'))
 
 
 def drop_api_exported_fields_so_that_api_import_will_validate(data):
